@@ -1,0 +1,11 @@
+{
+  "name": "hardhat-project",
+  "scripts": {
+    "dev-deploy": "npx hardhat run --network localhost scripts/dev-deploy.js",
+    "console": "npx hardhat console --network localhost"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "hardhat": "^2.8.0"
+  }
+}
