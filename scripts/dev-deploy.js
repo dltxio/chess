@@ -1,6 +1,6 @@
 async function main() {
   const ChessRanking = await hre.ethers.getContractFactory("ChessRanking");
-  const contract = await ChessRanking.deploy("ChessRanking");
+  const contract = await ChessRanking.deploy(Math.pow(10, 5), 30);
 
   await contract.deployed();
 
