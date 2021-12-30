@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 struct Player {
     string name;
-    uint256 elo;
+    int256 elo;
     uint256 wins;
     uint256 losses;
     uint256 draws;
@@ -16,12 +16,12 @@ contract ChessRanking is Ownable {
     address private _owner;
     mapping(address => bool) private _canRecordGame;
     mapping(address => Player) private _players;
-    uint256 _decimals;
-    uint256 _eloConstant;
+    int256 _decimals;
+    int256 _eloConstant;
 
-    constructor(uint256 decimals, uint256 eloConstant) {
+    constructor(uint256 decimals, int256 eloConstant) {
         _owner = msg.sender;
-        _decimals = 10**decimals;
+        _decimals = int256(10**decimals);
         _eloConstant = eloConstant;
     }
 
@@ -53,7 +53,7 @@ contract ChessRanking is Ownable {
         address player1,
         address player2,
         address winner
-    ) public requiresAuth returns (uint256, uint256) {
+    ) public requiresAuth returns (int256, int256) {
         require(
             winner == player1 || winner == player2 || winner == address(0),
             "The winner was not player1, player2, or the zero address"
@@ -70,18 +70,22 @@ contract ChessRanking is Ownable {
             _players[player2].initialized == true,
             "Player 2 is not initialized"
         );
-        uint256 transform1 = 10**(_players[player1].elo / 400);
-        uint256 transform2 = 10**(_players[player2].elo / 400);
+        int256 transform1 = int256(10**(uint256(_players[player1].elo / 400)));
+        int256 transform2 = int256(10**(uint256(_players[player2].elo / 400)));
 
-        uint256 expected1 = (transform1 * _decimals) /
-            (transform1 + transform2);
-        uint256 expected2 = (transform2 * _decimals) /
-            (transform1 + transform2);
+        int256 expected1 = (transform1 * _decimals) / (transform1 + transform2);
+        int256 expected2 = (transform2 * _decimals) / (transform1 + transform2);
 
         if (winner != address(0)) {
-            uint256 actual1 = winner == player1 ? 1 * _decimals : 0;
-            uint256 actual2 = winner == player2 ? 1 * _decimals : 0;
-
+            int256 actual1 = winner == player1 ? 1 * _decimals : int256(0);
+            int256 actual2 = winner == player2 ? 1 * _decimals : int256(0);
+            if (winner == player1) {
+                _players[player1].wins++;
+                _players[player2].losses++;
+            } else {
+                _players[player2].wins++;
+                _players[player1].losses++;
+            }
             _players[player1].elo =
                 _players[player1].elo +
                 (_eloConstant * (actual1 - expected1)) /
@@ -99,6 +103,8 @@ contract ChessRanking is Ownable {
                 _players[player2].elo +
                 _eloConstant *
                 ((_decimals / 2 - expected2) / _decimals);
+            _players[player1].draws++;
+            _players[player2].draws++;
         }
 
         return (_players[player1].elo, _players[player2].elo);
@@ -109,7 +115,7 @@ contract ChessRanking is Ownable {
         view
         returns (
             string memory,
-            uint256,
+            int256,
             uint256,
             uint256,
             uint256,
