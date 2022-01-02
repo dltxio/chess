@@ -13,7 +13,6 @@ struct Player {
 }
 
 contract ChessRanking is Ownable {
-    address private _owner;
     mapping(address => bool) private _canRecordGame;
     mapping(address => Player) private _players;
     int256 _decimals;
